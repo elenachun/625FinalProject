@@ -1,0 +1,350 @@
+---
+title: "625 Project Data Cleaning"
+output: pdf_document
+date: "2023-11-02"
+---
+
+```{r}
+library(haven)
+library(tidyverse)
+birthweight=read_xpt("P_ECQ.XPT")
+demo=read_xpt("P_DEMO.XPT")
+activity=read_xpt("P_PAQY.XPT")
+diet=read_xpt("P_DBQ.XPT")
+foodsec=read_xpt("P_FSQ.XPT")
+body=read_xpt("P_BMX.XPT")
+
+```
+
+
+```{r}
+df_list=list(birthweight,demo,activity,diet,foodsec,body)
+data=df_list%>%reduce(inner_join,by='SEQN')
+data=subset(data, select=c(SEQN,ECQ020,ECD070A,ECD070B,RIAGENDR,RIDAGEYR,FSDHH,BMXWT,BMXBMI,PAQ706,DBD900,
+                           RIDRETH3,WHQ030E))
+colnames(data)=c("SEQN","smoke","birth_pounds","birth_ounces","sex","age","food_sec","weight",
+                 "bmi","activity","fastfood","race")
+```
+
+
+
+```{r}
+#adding na for 9999
+data$birth_pounds[data$birth_pounds==9999]=NA
+data$birth_ounces[data$birth_ounces==9999]=NA
+
+#changing weight to pounds
+data$weight_pd=NA
+for (i in 1:3970) {
+  if (!is.na(data$weight[i])) {
+    data$weight_pd[i]=data$weight[i]*2.205
+  }
+}
+
+#combining birth pounds and birth ounces
+data$birthweight=NA
+for (i in 1:3970) {
+  if (!is.na(data$birth_pounds[i])) {
+    if (!is.na(data$birth_ounces[i])) {
+      if (data$birth_ounces[i]==0) {
+        data$birthweight[i]=data$birth_pounds[i]
+      } else {
+        data$birthweight[i]=data$birth_pounds[i]+(data$birth_ounces[i]/16)
+      }
+    }
+  }
+}
+
+#fixes smoke
+data$smoke[data$smoke==9]=NA
+data$smoke[data$smoke==7]=NA
+
+#changing birthweight to kg
+data$birthweight_kg=NA
+for (i in 1:3970) {
+  if (!is.na(data$birthweight[i])) {
+    data$birthweight_kg[i]=data$birthweight[i]/2.205
+  }
+}
+
+#fixing activity na
+data$activity[data$activity==99]=NA
+
+#fixing fastfood
+data$fastfood[data$fastfood==9999]=NA
+data$fastfood[data$fastfood==5555]=22
+
+
+```
+
+
+```{r}
+bmi_calc=read_csv("bmi-age-2022.csv")
+
+```
+
+
+```{r}
+bmi_calc_boy=subset(bmi_calc, sex==1)
+bmi_calc_girl=subset(bmi_calc, sex==2)
+
+```
+
+```{r}
+#adds percentiles for boys and girls with below 95 percentile
+data$percentile1=NA
+
+for (i in 1:3970) {
+  if (data$sex[i]==1) {
+    if (!is.na(data$bmi[i])) {
+      if (data$age[i]==2 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==24.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==24.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==24.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==24.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==24.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==3 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==36.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==36.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==36.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==36.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==36.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==4 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==48.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==48.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==48.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==48.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==48.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==5 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==60.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==60.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==60.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==60.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==60.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==6 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==72.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==72.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==72.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==72.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==72.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==7 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==84.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==84.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==84.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==84.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==84.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==8 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==96.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==96.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==96.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==96.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==96.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==9 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==108.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==108.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==108.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==108.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==108.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==10 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==120.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==120.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==120.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==120.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==120.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==11 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==132.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==132.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==132.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==132.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==132.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==12 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==144.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==144.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==144.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==144.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==144.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==13 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==156.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==156.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==156.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==156.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==156.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==14 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==168.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==168.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==168.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==168.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==168.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==15 && data$bmi[i]<=bmi_calc_boy$P95[bmi_calc_boy$agemos==180.5]) {
+        zscore=((data$bmi[i]/bmi_calc_boy$M[bmi_calc_boy$agemos==180.5])^(bmi_calc_boy$L[bmi_calc_boy$agemos==180.5])-1)/
+          (bmi_calc_boy$L[bmi_calc_boy$agemos==180.5]*bmi_calc_boy$S[bmi_calc_boy$agemos==180.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      }  
+    }
+  }
+}
+
+
+for (i in 1:3970) {
+  if (data$sex[i]==2) {
+    if (!is.na(data$bmi[i])) {
+      if (data$age[i]==2 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==24.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==24.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==24.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==24.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==24.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==3 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==36.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==36.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==36.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==36.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==36.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==4 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==48.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==48.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==48.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==48.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==48.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==5 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==60.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==60.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==60.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==60.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==60.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==6 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==72.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==72.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==72.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==72.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==72.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==7 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==84.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==84.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==84.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==84.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==84.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==8 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==96.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==96.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==96.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==96.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==96.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==9 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==108.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==108.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==108.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==108.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==108.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==10 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==120.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==120.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==120.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==120.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==120.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==11 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==132.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==132.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==132.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==132.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==132.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==12 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==144.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==144.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==144.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==144.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==144.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==13 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==156.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==156.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==156.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==156.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==156.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==14 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==168.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==168.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==168.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==168.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==168.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      } else if (data$age[i]==15 && data$bmi[i]<=bmi_calc_girl$P95[bmi_calc_girl$agemos==180.5]) {
+        zscore=((data$bmi[i]/bmi_calc_girl$M[bmi_calc_girl$agemos==180.5])^(bmi_calc_girl$L[bmi_calc_girl$agemos==180.5])-1)/
+          (bmi_calc_girl$L[bmi_calc_girl$agemos==180.5]*bmi_calc_girl$S[bmi_calc_girl$agemos==180.5])
+        data$percentile1[i]=pnorm(zscore)*100
+      }  
+    }
+  }
+}
+
+
+```
+
+```{r}
+#adds percentiles for boys and girls with above 95 percentile
+for (i in 1:3970) {
+  if (is.na(data$percentile1[i])) {
+    if (data$sex[i]==1) {
+      if (!is.na(data$bmi[i])) {
+        if (data$age[i]==2) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==24.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==24.5])
+        } else if (data$age[i]==3) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==36.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==36.5])
+        }  else if (data$age[i]==4) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==48.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==48.5])
+        }  else if (data$age[i]==5) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==60.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==60.5])
+        }  else if (data$age[i]==6) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==72.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==72.5])
+        }  else if (data$age[i]==7) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==84.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==84.5])
+        }  else if (data$age[i]==8) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==96.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==96.5])
+        }  else if (data$age[i]==9) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==108.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==108.5])
+        }  else if (data$age[i]==10) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==120.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==120.5])
+        }  else if (data$age[i]==11) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==132.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==132.5])
+        }  else if (data$age[i]==12) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==144.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==144.5])
+        }  else if (data$age[i]==13) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==156.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==156.5])
+        }  else if (data$age[i]==14) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==168.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==168.5])
+        }  else if (data$age[i]==15) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_boy$P95[bmi_calc_boy$agemos==180.5])/
+                                            bmi_calc_boy$sigma[bmi_calc_boy$agemos==180.5])
+        }
+      }
+    }
+  }
+}
+
+
+for (i in 1:3970) {
+  if (is.na(data$percentile1[i])) {
+    if (data$sex[i]==2) {
+      if (!is.na(data$bmi[i])) {
+        if (data$age[i]==2) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==24.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==24.5])
+        } else if (data$age[i]==3) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==36.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==36.5])
+        }  else if (data$age[i]==4) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==48.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==48.5])
+        }  else if (data$age[i]==5) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==60.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==60.5])
+        }  else if (data$age[i]==6) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==72.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==72.5])
+        }  else if (data$age[i]==7) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==84.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==84.5])
+        }  else if (data$age[i]==8) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==96.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==96.5])
+        }  else if (data$age[i]==9) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==108.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==108.5])
+        }  else if (data$age[i]==10) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==120.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==120.5])
+        }  else if (data$age[i]==11) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==132.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==132.5])
+        }  else if (data$age[i]==12) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==144.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==144.5])
+        }  else if (data$age[i]==13) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==156.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==156.5])
+        }  else if (data$age[i]==14) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==168.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==168.5])
+        }  else if (data$age[i]==15) {
+          data$percentile1[i]=90+10*pnorm((data$bmi[i]-bmi_calc_girl$P95[bmi_calc_girl$agemos==180.5])/
+                                            bmi_calc_girl$sigma[bmi_calc_girl$agemos==180.5])
+        }
+      }
+    }
+  }
+}
+```
+
+```{r}
+clean_data=subset(data,select=c(SEQN,smoke,sex,age,food_sec,activity,fastfood,race,birthweight,percentile1))
+colnames(clean_data)=c("seq_id","smoke","sex","age","food_sec","activity","fastfood","race","birthweight","growth_percentile")
+
+clean_data$smoke=factor(clean_data$smoke)
+clean_data$sex=factor(clean_data$sex)
+clean_data$food_sec=factor(clean_data$food_sec)
+clean_data$activity=factor(clean_data$activity)
+clean_data$race=factor(clean_data$race)
+
+#saveRDS(clean_data,file="clean_data.RDS")
+```
+
+
