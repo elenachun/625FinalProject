@@ -10,12 +10,28 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Introduction:
-Childhood obesity, also known as pediatric obesity, is a pressing issue that affects youth throughout the country. According to the Center for Disease Control (CDC), as of 2022, childhood obesity affects 1 in 5 children in the United States.1 There are a variety of factors that can lead to childhood obesity, from lifestyle to medication or genetic factors. Studies show that there may be a correlation between birth weight and the likelihood of childhood obesity. Despite sex differences, a higher birth weight increases the chances of developing obesity in adolescents. The National Health and Nutrition Examination Survey (NHANES) is “designed to address the health and nutritional status of adults and children in the United States”. This survey evaluates all aspects of a person’s health and nutritional habits. Factors recorded such as gender, age, food security, days physically active, mother smoked while pregnant, and number of meals from a fast food or pizza place, can be used to perform a regression analysis. This analysis may provide an explanation for childhood obesity trends, defined by birth weight. 
+Childhood obesity, also known as pediatric obesity, is a pressing issue that affects youth throughout the country. According to the Center for Disease Control (CDC), 
+as of 2022, childhood obesity affects 1 in 5 children in the United States.1 There are a variety of factors that can lead to childhood obesity, from lifestyle to medication 
+or genetic factors. Studies show that there may be a correlation between birth weight and the likelihood of childhood obesity. Despite sex differences, a higher birth weight 
+increases the chances of developing obesity in adolescents. The National Health and Nutrition Examination Survey (NHANES) is “designed to address the health and nutritional 
+status of adults and children in the United States”. This survey evaluates all aspects of a person’s health and nutritional habits. Factors recorded such as gender, age, food 
+security, days physically active, mother smoked while pregnant, and number of meals from a fast food or pizza place, can be used to perform a regression analysis. This analysis 
+may provide an explanation for childhood obesity trends, defined by birth weight. 
 
 ### Data Overview:
-The data being used comes from The National Health and Nutrition Examination Survey (NHANES) conducted by the CDC for 2017-2020. The response variable for this analysis is growth percentile. The predictor of interest for this analysis is weight at birth, measured in pounds, reported for children ages 0-15 at the time of the survey. Other predictor variables include: gender, days physically active, mother smoked while pregnant, food security, race, and number of meals from a fast food or pizza place. These are all factors that are believed to explain trends in weight, and its effect on childhood obesity. Gender and race are demographic information reported by the survey participants. Days physically active is a metric measuring how many days of the week youths aged 2-17 are physically active for at least 60 minutes. Mother smoked while pregnant is a binary variable that assesses the smoking habits of the participants' biological mother. Food security is a categorical variable which rates the household food security on a scale of 1 to 4, where 1 is full food security and 4 is very low food security. Number of meals from a fast food or pizza place is the estimated number of meals not prepared at home, which are from a fast food restaurant or a pizza place, in a week. 
+The data being used comes from The National Health and Nutrition Examination Survey (NHANES) conducted by the CDC for 2017-2020. The response variable for this analysis is 
+growth percentile. The predictor of interest for this analysis is weight at birth, measured in pounds, reported for children ages 0-15 at the time of the survey. Other predictor 
+variables include: gender, days physically active, mother smoked while pregnant, food security, race, and number of meals from a fast food or pizza place. These are all factors 
+that are believed to explain trends in weight, and its effect on childhood obesity. Gender and race are demographic information reported by the survey participants. Days physically 
+active is a metric measuring how many days of the week youths aged 2-17 are physically active for at least 60 minutes. Mother smoked while pregnant is a binary variable that 
+assesses the smoking habits of the participants' biological mother. Food security is a categorical variable which rates the household food security on a scale of 1 to 4, where 1 is 
+full food security and 4 is very low food security. Number of meals from a fast food or pizza place is the estimated number of meals not prepared at home, which are from a fast food 
+restaurant or a pizza place, in a week. 
 
 ### Data Cleaning:
+We intially wanted to use BMI as the response variable for our linear regression model. However, unlike adults, children are still growing. Therfore, what defines a 'healthy BMI' for 
+children is highly dependent on their age. To combat this issue, we used the BMI information, as well as age, to calculate BMI percentiles based on equations provided by the CDC. 
+Additionally, we combined birth weight in pounds (lbs) and birth weight in ounces (oz) to a single borthweight variable in pounds for easier interpretation. 
 
 ### Exploratory Analysis:
 
