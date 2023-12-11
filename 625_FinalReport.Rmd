@@ -1,7 +1,7 @@
 ---
 title: "Analyzing the Factors Affecting BMI Percentiles of Children Aged 2-15"
 authors: "Aanya Mohan, Elena Chun, Siwei Cao"
-output: html_document
+output: pdf_document
 date: "2023-12-10"
 ---
 
@@ -31,15 +31,39 @@ restaurant or a pizza place, in a week.
 ### Data Cleaning:
 We intially wanted to use BMI as the response variable for our linear regression model. However, unlike adults, children are still growing. Therfore, what defines a 'healthy BMI' for 
 children is highly dependent on their age. To combat this issue, we used the BMI information, as well as age, to calculate BMI percentiles based on equations provided by the CDC. 
-Additionally, we combined birth weight in pounds (lbs) and birth weight in ounces (oz) to a single borthweight variable in pounds for easier interpretation. 
+Additionally, we combined birth weight in pounds (lbs) and birth weight in ounces (oz) to a single borthweight variable in pounds for easier interpretation. Something to note in this
+section is the high number of missing data from the category "# of meals from fast food or pizza place". 
+```{r, include=FALSE}
+#Code to load data
+```
 
 ### Exploratory Analysis:
+Previous literature indicated that there would be a positive correlation between BMI percentile and birth weight. When plotting the entire data, it is unclear from this initial plot 
+(Figure 1) whether there is a relationship or not. 
+```{r, include=FALSE}
+#Code for scatterplot of all data
+```
+After taking a random sample of 50 observations, we can see a slight positive correlation between birth weight and BMI percentile. 
+```{r, include=FALSE}
+#Code for random sample scatterplot
+```
 
 ### Linear Regression Model:
+The exporatory analysis of this data resulted in the following initial linear model:
+$$Growth Percentile = \beta_{0} + \beta_{1}Sex + \beta_{2}Race + \beta_{3}BirthWeight + \beta_{4}Smoke + \beta_{5}FoodSecurity + \beta_{6}FastFood + \beta_{7}Activity + \varepsilon$$
+
 
 ### Diagnostics:
 
 ### Results:
+Significant associations with BMI percentile include birth weight, whether mother smoked during pregnancy, seven days of physical activity, being Mexican American, being Other Hispanic,
+being Asian, and being female with very low food security. For every 1 pound increase in birth weight, BMI percentile increases about 3 percentiles adjusting for all other variables.
+Children with 7 days of physical activity have BMI percentiles about 14 percentiles lower compared to children with 0 days of physical activity adjusting for all other variables. 
+Additionally, the effect of very low food security on BMI percentile is different for females and males. Asian children have BMI percentiles about 11 percentiles lower compared to 
+White children adjusting for all other variables. 
 
 ### Conclusions:
+Using linear regression, we identified factors associated with BMI percentiles in children of ages 2-15. There are both innate and environmental factors that are associated with 
+BMI percentiles. As childhood obesity is a serious problem that is often overlooked, it is important to further study these factors and promote a healthier lifestyle among children
+In the future, we would like to replicate our analysis after imputing data for number of fast food meals/week using MICE (Multiple Imputation by Chained Equation). 
 
