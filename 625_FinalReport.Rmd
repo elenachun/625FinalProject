@@ -19,14 +19,14 @@ knitr::opts_chunk$set(echo = TRUE)
 Childhood obesity, also known as pediatric obesity, is a pressing issue
 that affects youth throughout the country. According to the Center for
 Disease Control (CDC), as of 2022, childhood obesity affects 1 in 5
-children in the United States.1 There are a variety of factors that can
+children in the United States${_1}$. There are a variety of factors that can
 lead to childhood obesity, from lifestyle to medication or genetic
 factors. Studies show that there may be a correlation between birth
 weight and the likelihood of childhood obesity. Despite sex differences,
 a higher birth weight increases the chances of developing obesity in
 adolescents. The National Health and Nutrition Examination Survey
 (NHANES) is "designed to address the health and nutritional status of
-adults and children in the United States". This survey evaluates all
+adults and children in the United States"${_2}$. This survey evaluates all
 aspects of a person's health and nutritional habits. Factors recorded
 such as gender, age, food security, days physically active, mother
 smoked while pregnant, and number of meals from a fast food or pizza
@@ -230,6 +230,7 @@ assumption of constant variance is reasonable. This shows that the
 linear regression model is a good fit for the data.
 
 Next we will examine diagnostics of the logistic regression model.
+
 ### Figure 3
 ```{r, echo=FALSE,fig.width=5, fig.height=3,fig.align='center'}
 cooks_distance <- cooks.distance(m4)
@@ -329,10 +330,10 @@ Chained Equation).
 ## References:
 
 1.  Childhood Overweight & Obesity . Published 2023. Accessed November
-    14, 2023.
+    14, 2023.\
     [[https://www.cdc.gov/obesity/childhood/index.html\\\\](https://www.cdc.gov/obesity/childhood/index.html\\){.uri}]([https://www.cdc.gov/obesity/childhood/index.html\\](https://www.cdc.gov/obesity/childhood/index.html\){.uri}){.uri}
 2.  NHANES - About the National Health and Nutrition Examination Survey.
-    Published 2023. Accessed November 14, 2023.
+    Published 2023. Accessed November 14, 2023.\
     [[https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\\\](https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\){.uri}]([https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\](https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\){.uri}){.uri}
 3.  Link to GitHub repository:
     <https://github.com/elenachun/625FinalProject>
