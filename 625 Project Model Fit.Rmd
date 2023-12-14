@@ -16,30 +16,16 @@ foodsec=read_xpt("P_FSQ.XPT")
 body=read_xpt("P_BMX.XPT")
 
 ```
-In this proposed model, we assume a linear relationship between the outcome and predictors. This assumption can be checked by the residual vs fitted plot. Second, linear regression requires multivariate normality among the variables, and this assumption can be checked by the normal Q-Q plot. Another assumption is that residual errors have a distribution centered around 0 with constant variance and are independent with each other and to the predictors. This is checked by the residual plot and scale location plot.
-
-Model 1:\
-$GrowthPercentile = \beta_0 + \beta_1Sex + \beta_2Race + \beta_3BirthWeight + \beta_4Smoke + \beta_5FoodSecurity + \beta_6FastFood$\
-$+ \beta_7Activity + \epsilon$
-
-Model 2:\
-$sqrt(GrowthPercentile) = \beta_0 + \beta_1Sex + \beta_2Race + \beta_3BirthWeight + \beta_4Smoke + \beta_5FoodSecurity + \beta_6FastFood + \beta_7Activity + \beta_8Sex*FoodSecurity + \epsilon$
-
-each persons bmi under conditions, each person can have different
-age on bmi is different for individual
-random slope before and after age 60
-
-one random slope: inter individual variation is same before and after
-inter individual differences different 
 
 ```{r}
+#Load the clean data resulting from 625 Project Data Cleaning.Rmd
 data <- readRDS('clean_data.RDS')
-data
-colnames(data)
-data$race <- factor(data$race, levels = c(3, 1,2,4,5,6,7))
-data$activity1 <- as.character(data$activity)
 
-# Categorize activity into levels
+#Change the reference of race to white americans
+data$race <- factor(data$race, levels = c(3, 1,2,4,5,6,7))
+
+#Categorize activity into levels
+data$activity1 <- as.character(data$activity)
 data <- data %>%
   mutate(activity1 = case_when(
     activity1 =='0' ~ "0",
@@ -57,7 +43,7 @@ data
 ```
 
 ```{r}
-#Fit a linear regressiion model
+#Fit a linear regressiion model with the predictors we found from EDA
 m1 <- lm(sqrt(growth_percentile) ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1, data=data)
 summary(m1)
 AIC(m1)
@@ -65,15 +51,18 @@ plot(m1$residuals)
 ```
 
 ```{r}
-#check for potential interactions
+#check for potential interactions by plotting response and predictors filled by levels of sex
 ggplot(data, aes(x=race, y=growth_percentile, fill=sex)) + 
     geom_boxplot()
 ggplot(data, aes(x=birthweight, y=growth_percentile, fill=sex)) + 
     geom_boxplot()
 ggplot(data, aes(x=smoke, y=growth_percentile, fill=sex)) + 
     geom_boxplot()
+
+#It seems that there is potential interaction between food security and sex
 ggplot(data, aes(x=food_sec, y=growth_percentile, fill=sex)) + 
     geom_boxplot()
+
 ggplot(data, aes(x=fastfood, y=growth_percentile, fill=sex)) + 
     geom_boxplot()
 ggplot(data, aes(x=activity1, y=growth_percentile, fill=sex)) + 
@@ -81,12 +70,13 @@ ggplot(data, aes(x=activity1, y=growth_percentile, fill=sex)) +
 ```
 
 ```{r}
-#linear regression model with interaction
+#linear regression model with interaction sex*food security
 m2 <- lm(growth_percentile ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1+sex*food_sec, data=data)
 summary(m2)
 AIC(m2)
-plot(m2)
+plot(m2, which=2)
 
+#After checking diagnostic plots of m2, normal qq plot does not follow straight line
 #Added in transformation for normal distributed residuals
 m3 <- lm(sqrt(growth_percentile) ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1+sex*food_sec, data=data)
 summary(m3)
@@ -109,7 +99,8 @@ qqline(residuals(m2))
 ```
 
 ```{r}
-#Logistic regression for obese binary variable
+#Logistic regression for obesity binary variable using predictors resulting from linear regression analysis
+#Make obesity binary variable (>= 95 BMI percentile is considered obese)
 data <- data %>%
   mutate(growth_percentile1 = case_when(
     growth_percentile < 95 ~ 0,
@@ -119,19 +110,22 @@ data <- data %>%
 data$growth_percentile1 <- as.factor(data$growth_percentile1)
 data
 
-
-m4 <- glm(growth_percentile1 ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1+sex*food_sec, data = data, family = binomial)
-#m4 <- glm(growth_percentile1 ~ race+birthweight+smoke+activity1, data = data, family = binomial)
+#Fit logistic regression model
+m4 <- glm(growth_percentile1 ~ race+birthweight+smoke+food_sec+fastfood+activity1, data = data, family = binomial)
 summary(m4)
 AIC(m4)
 plot(m4)
 
+#check diagnostics cooks distance
 cooks_distance <- cooks.distance(m4)
 plot(cooks_distance, pch = 20, main = "Cook's Distance Plot")
+
+#VIF values
 library(car)
-crPlots(m4)
+#crPlots(m4)
 vif(m4)
 
+#Deviance residuals plots
 deviance_residuals <- residuals(m4, type = "deviance")
 plot(predict(m4, type = "response"), deviance_residuals, 
      ylab = "Deviance Residuals", xlab = "Fitted Values")
