@@ -5,6 +5,7 @@ date: "2023-11-02"
 ---
 
 ```{r}
+#importing libraries and dataset files
 library(haven)
 library(tidyverse)
 birthweight=read_xpt("P_ECQ.XPT")
@@ -13,11 +14,11 @@ activity=read_xpt("P_PAQY.XPT")
 diet=read_xpt("P_DBQ.XPT")
 foodsec=read_xpt("P_FSQ.XPT")
 body=read_xpt("P_BMX.XPT")
-
 ```
 
 
 ```{r}
+#filtering dataset to only variables of interest and renaming column names
 df_list=list(birthweight,demo,activity,diet,foodsec,body)
 data=df_list%>%reduce(inner_join,by='SEQN')
 data=subset(data, select=c(SEQN,ECQ020,ECD070A,ECD070B,RIAGENDR,RIDAGEYR,FSDHH,BMXWT,BMXBMI,PAQ706,DBD900,
@@ -29,6 +30,8 @@ colnames(data)=c("SEQN","smoke","birth_pounds","birth_ounces","sex","age","food_
 
 
 ```{r}
+#data cleaning
+
 #adding na for 9999
 data$birth_pounds[data$birth_pounds==9999]=NA
 data$birth_ounces[data$birth_ounces==9999]=NA
@@ -55,40 +58,30 @@ for (i in 1:3970) {
   }
 }
 
-#fixes smoke
+#adding na values for smoke
 data$smoke[data$smoke==9]=NA
 data$smoke[data$smoke==7]=NA
 
-#changing birthweight to kg
-data$birthweight_kg=NA
-for (i in 1:3970) {
-  if (!is.na(data$birthweight[i])) {
-    data$birthweight_kg[i]=data$birthweight[i]/2.205
-  }
-}
 
-#fixing activity na
+#adding na values for activity
 data$activity[data$activity==99]=NA
 
-#fixing fastfood
+#adding na values for fastfood
 data$fastfood[data$fastfood==9999]=NA
 data$fastfood[data$fastfood==5555]=22
 
-
 ```
 
 
 ```{r}
+#importing data file for bmi percentile calculations from cdc
 bmi_calc=read_csv("bmi-age-2022.csv")
 
-```
-
-
-```{r}
+#subsetting data file for boy and girl
 bmi_calc_boy=subset(bmi_calc, sex==1)
 bmi_calc_girl=subset(bmi_calc, sex==2)
-
 ```
+
 
 ```{r}
 #adds percentiles for boys and girls with below 95 percentile
@@ -335,6 +328,7 @@ for (i in 1:3970) {
 ```
 
 ```{r}
+#filtering for final cleaned dataset and adding column names
 clean_data=subset(data,select=c(SEQN,smoke,sex,age,food_sec,activity,fastfood,race,birthweight,percentile1))
 colnames(clean_data)=c("seq_id","smoke","sex","age","food_sec","activity","fastfood","race","birthweight","growth_percentile")
 
