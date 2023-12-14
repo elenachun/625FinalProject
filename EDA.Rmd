@@ -1,0 +1,110 @@
+---
+title: "EDA"
+output: pdf_document
+date: "2023-12-02"
+---
+
+```{r}
+#importing clean data from data cleaning
+data=readRDS("clean_data.RDS")
+```
+
+
+```{r}
+#plotting growth percentile and birthweight
+library(ggplot2)
+ggplot(data,aes(x = birthweight, y = growth_percentile)) + geom_point(alpha=0.5) + ylab("Growth Percentile") + xlab("Birth Weight (lbs)") + scale_x_continuous(breaks = seq(3,11,1)) + labs(title = "Plot of Growth Percentile vs. Birth Weight(lbs)") + theme(plot.title = element_text(size = 16))
+
+```
+
+```{r}
+#taking a random sample of 50 observations from dataset and plotting growth percentile and birthweight
+random_sub_data=sample_n(data,50)
+
+ggplot(aes(x=birthweight,y=growth_percentile),data=random_sub_data)+geom_point()+labs(title = "Scatterplot of BMI Percentile vs. Birthweight") + ylab("BMI Percentile") + xlab("Birthweight") + xlim(4,10)
+
+```
+
+
+```{r}
+#creating a complete data data frame to make plots
+complete_data=na.omit(data)
+complete_data$race=as.character(complete_data$race)
+complete_data$food_sec=as.character(complete_data$food_sec)
+complete_data$sex=as.character(complete_data$sex)
+complete_data$smoke=as.character(complete_data$smoke)
+
+```
+
+```{r}
+#fixing variables so plot labels are correct 
+#adding descriptions for race
+complete_data$race[complete_data$race=="1"]="Mexican American"
+complete_data$race[complete_data$race=="2"]="Other Hispanic"
+complete_data$race[complete_data$race=="3"]="Non-Hispanic White"
+complete_data$race[complete_data$race=="4"]="Non-Hispanic Black"
+complete_data$race[complete_data$race=="6"]="Non-Hispanic Asian"
+complete_data$race[complete_data$race=="7"]="Other Race (Multi)"
+
+#adding descriptions for food security
+complete_data$food_sec[complete_data$food_sec=="1"]="Full Security"
+complete_data$food_sec[complete_data$food_sec=="2"]="Mariginal Security"
+complete_data$food_sec[complete_data$food_sec=="3"]="Low Security"
+complete_data$food_sec[complete_data$food_sec=="4"]="Very Low Security"
+
+#adding descriptions for gender
+complete_data$sex[complete_data$sex==1]="Male"
+complete_data$sex[complete_data$sex==2]="Female"
+
+#adding descriptions for smoke
+complete_data$smoke[complete_data$smoke==1]="Yes"
+complete_data$smoke[complete_data$smoke==2]="No"
+
+#factoring all categorical variables
+complete_data$race=as.factor(complete_data$race)
+complete_data$food_sec=as.factor(complete_data$food_sec)
+complete_data$sex=as.factor(complete_data$sex)
+complete_data$smoke=as.factor(complete_data$smoke)
+```
+
+
+```{r}
+#plot of all covariates and bmi percentile
+(race_boxplot=ggplot(aes(x=race, y=growth_percentile),data=complete_data) + geom_boxplot()+labs(title = "Boxplot of BMI Percentile vs. Race") + ylab("BMI Percentile") + xlab("Race"))
+
+(food_sec_boxplot=ggplot(aes(x=food_sec, y=growth_percentile,fill=food_sec),data=complete_data) + geom_boxplot() + labs(title = "Boxplot of BMI Percentile vs. Household Food Security",fill="Food Security") + ylab("BMI Percentile") + xlab("Household Food Security"))
+
+(sex_boxplot=ggplot(aes(x=sex, y=growth_percentile),data=complete_data) + geom_boxplot() + labs(title = "Boxplot of BMI Percentile vs. Sex") + ylab("BMI Percentile") + xlab("Sex"))
+
+(smoke_boxplot=ggplot(aes(x=smoke, y=growth_percentile),data=complete_data) + geom_boxplot() + labs(title = "Boxplot of BMI Percentile vs. Smoke") + ylab("BMI Percentile") + xlab("Mother Smoked When Pregnant"))
+
+(ggplot(aes(x=activity, y=growth_percentile, fill=activity),data=complete_data) + geom_boxplot() + labs(title = "Boxplot of BMI Percentile vs. Physical Activity",fill="Days of Physical Activity") + ylab("BMI Percentile") + xlab("Days Physically Active for >= 60 Minutes"))
+
+(ggplot(aes(x=fastfood,y=growth_percentile),data=complete_data) + geom_point() + labs(title = "Scatterplot of BMI Percentile vs. Number of Meals from Fast Food/Pizza in a Week") + ylab("BMI Percentile") + xlab("Number of Meals from Fast Food/Pizza in a Week"))
+
+```
+
+
+```{r}
+#summary table of all variables in dataset
+library(gtsummary)
+
+set_gtsummary_theme(theme_gtsummary_compact())
+
+data%>%select(smoke,sex,age,food_sec,activity,fastfood,race,birthweight,growth_percentile)%>%
+  tbl_summary(
+      label = list(
+      smoke ~ "Mother Smoked When Pregnant",
+      sex ~ "Sex",
+      food_sec ~ "Food Security",
+      activity ~ "Days Physically Active in a Week",
+      race ~ "Race",
+      fastfood ~ "Number of meals from fast food in a week",
+      birthweight ~ "Birth Weight (lbs)",
+      growth_percentile ~ "BMI Percentile"),
+      missing = "ifany",
+      missing_text = "Missing",
+  )
+
+```
+
