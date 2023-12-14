@@ -208,3 +208,4 @@ https://www.cdc.gov/obesity/childhood/index.html\
 
 ## Contributions:
 Elena Chun - Model fitting, diagnostics, part of results
+Aanya Mohan - Background, Data Overview, Conclusion
