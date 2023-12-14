@@ -65,12 +65,11 @@ appropriate as children are usually measured in percentiles and a
 healthy BMI can change depending on what age children are in
 development. To create the BMI percentile variable, we used equations
 provided by the CDC along with the variables BMI, age, and gender which
-were included in the dataset. The birth weight variable in the dataset
+were provided in the dataset. The birth weight variable in the dataset
 was given as two variables of birth weight in pounds (lb) and birth
 weight in ounces (oz), which is typically how birth weight is measured
 for babies. For easier interpretability, both variables were combined
-and reported solely as birth weight in pounds (lb). Below is a table
-with summary statistics from the dataset after data cleaning.
+and reported solely as birth weight in pounds (lb). Lastly, days of physical activity was binned into categories of 0 days, 1-3 days, 4-6 days, and 7 days as we did not expect big differences in BMI percentiles for each day of physical activity.
 
 ```{r, echo=FALSE,message=FALSE,fig.height=3,fig.width=3,fig}
 library(haven)
@@ -78,6 +77,7 @@ library(tidyverse)
 library(dplyr)
 library(car)
 library(gtsummary)
+library(ggplot2)
 data <- readRDS('clean_data.RDS')
 data$race <- factor(data$race, levels = c(3, 1,2,4,5,6,7))
 data$activity1 <- as.character(data$activity)
@@ -97,59 +97,104 @@ data <- data %>%
 
 data$activity1 <- as.factor(data$activity1)
 
-set_gtsummary_theme(theme_gtsummary_compact())
+complete_data=na.omit(data)
+complete_data$race=as.character(complete_data$race)
+complete_data$food_sec=as.character(complete_data$food_sec)
+complete_data$sex=as.character(complete_data$sex)
+complete_data$smoke=as.character(complete_data$smoke)
 
-data%>%select(smoke,sex,age,food_sec,activity,fastfood,race,birthweight,growth_percentile)%>%
-  tbl_summary(
-    label = list(
-      smoke ~ "Mother Smoked When Pregnant",
-      sex ~ "Sex",
-      food_sec ~ "Food Security",
-      activity ~ "Days Physically Active in a Week",
-      race ~ "Race",
-      fastfood ~ "Number of meals from fast food in a week",
-      birthweight ~ "Birth Weight (lbs)",
-      growth_percentile ~ "BMI Percentile"),
-    missing = "ifany",
-    missing_text = "Missing")
+#fixing variables so plot labels are correct 
+#adding descriptions for race
+complete_data$race[complete_data$race=="1"]="Mexican American"
+complete_data$race[complete_data$race=="2"]="Other Hispanic"
+complete_data$race[complete_data$race=="3"]="Non-Hispanic White"
+complete_data$race[complete_data$race=="4"]="Non-Hispanic Black"
+complete_data$race[complete_data$race=="6"]="Non-Hispanic Asian"
+complete_data$race[complete_data$race=="7"]="Other Race (Multi)"
 
+#adding descriptions for food security
+complete_data$food_sec[complete_data$food_sec=="1"]="Full Security"
+complete_data$food_sec[complete_data$food_sec=="2"]="Mariginal Security"
+complete_data$food_sec[complete_data$food_sec=="3"]="Low Security"
+complete_data$food_sec[complete_data$food_sec=="4"]="Very Low Security"
+
+#adding descriptions for gender
+complete_data$sex[complete_data$sex==1]="Male"
+complete_data$sex[complete_data$sex==2]="Female"
+
+#adding descriptions for smoke
+complete_data$smoke[complete_data$smoke==1]="Yes"
+complete_data$smoke[complete_data$smoke==2]="No"
+
+#factoring all categorical variables
+complete_data$race=as.factor(complete_data$race)
+complete_data$food_sec=as.factor(complete_data$food_sec)
+complete_data$sex=as.factor(complete_data$sex)
+complete_data$smoke=as.factor(complete_data$smoke)
 
 ```
 
 ## Exploratory Analysis:
 
-Previous literature indicated that there would be a positive correlation
-between BMI percentile and birth weight. When plotting the entire data,
-it is unclear from this initial plot (Figure 1) whether there is a
-relationship or not.
+To explore potential relationships between BMI percentile and various covariates, we conducted exploratory analysis to solidify which variables would be included in our model. Previous literature has suggested that there is a positive correlation
+between BMI percentile and birth weight. In the initial plot of BMI percentile and birthweight (Figure 1A), it is unclear whether there is a relationship between the two variables due to the dense data. After taking a random sample of 50 observations from the dataset (Figure 1B), we can see a slight
+positive correlation between BMI percentile and birth weight. Additionally, other notable covariate relationships with BMI percentile include race, household food security, and activity. In Figure 1C, differences in BMI percentiles between race are shown and Non-Hispanic Asian children have noticeably lower average BMI percentiles than other races. Differences in BMI percentiles and household food security are shown in Figure 1D and BMI percentiles appear to increase as household food security decreases. A similar relationship was found between BMI percentile and days of physical activity where BMI percentiles decreased as days of physical activity increased. Children with mothers who smoked during pregnancy had higher BMI percentiles than those who did not. Other covariates that did not show discernible differences in BMI percentile were gender and number of meals from fast food place. However, these covariates were included in the analysis as we expect these variables to influence BMI percentile based on previous literature.
 
-```{r, include=FALSE}
-#Code for scatterplot of all data
-```
+### Figure 1
 
-After taking a random sample of 50 observations, we can see a slight
-positive correlation between birth weight and BMI percentile.
+```{r, echo=FALSE,warning=FALSE}
+library(ggpubr)
+random_sub_data=sample_n(data,50)
+par(mfrow = c(1, 2))
+bw_plot=ggplot(data,aes(x = birthweight, y = growth_percentile)) + geom_point(alpha=0.5) + ylab("Growth Percentile") + xlab("Birth Weight (lbs)") + scale_x_continuous(breaks = seq(3,11,1)) + labs(subtitle = "Plot of Growth Percentile vs. Birth Weight(lbs)") + theme(plot.subtitle = element_text(size = 9))
 
-```{r, include=FALSE}
-#Code for random sample scatterplot
+random_plot=ggplot(aes(x=birthweight,y=growth_percentile),data=random_sub_data)+geom_point()+labs(subtitle = "Scatterplot of BMI Percentile vs. Birthweight") + ylab("BMI Percentile") + xlab("Birthweight (lb)") + xlim(4,10)+ theme(plot.subtitle = element_text(size = 9))
+
+race_boxplot=ggplot(aes(x=race, y=growth_percentile,fill=race),data=complete_data) + geom_boxplot()+labs(subtitle = "Boxplot of BMI Percentile vs. Race",fill="Race") + ylab("BMI Percentile") + xlab("Race")+ theme(plot.subtitle = element_text(size = 9))
+
+food_sec_boxplot=ggplot(aes(x=food_sec, y=growth_percentile,fill=food_sec),data=complete_data) + geom_boxplot() + labs(subtitle = "Boxplot of BMI Percentile vs. Food Security",fill="Food Security") + ylab("BMI Percentile") + xlab("Household Food Security")+ theme(plot.subtitle = element_text(size = 9))
+
+ggarrange(bw_plot,random_plot,race_boxplot+rremove("x.text"),food_sec_boxplot+rremove("x.text"),labels = c("A","B","C","D"))
+
 ```
 
 ## Model:
-The exploratory analysis of this data resulted in the following initial linear model:\
-$Growth Percentile = \beta_{0} + \beta_{1}Sex + \beta_{2}Race + \beta_{3}BirthWeight + \beta_{4}Smoke + \beta_{5}FoodSecurity + \beta_{6}FastFood + \beta_{7}Activity + \varepsilon$
 
-After fitting this model, we were interested in whether the relationship between BMI percentile and a predictor depends on levels of another predictor. To find these interactions, we plotted boxplots of the relationships between the response and a predictor against levels of another predictor. We found that the association between BMI percentile and food security is not constant across males and females. Thus, we included the interaction between food security and sex into our regression model:\
-$Growth Percentile = \beta_{0} + \beta_{1}Sex + \beta_{2}Race + \beta_{3}BirthWeight + \beta_{4}Smoke + \beta_{5}FoodSecurity + \beta_{6}FastFood$\
+The exploratory analysis of this data resulted in the following initial
+linear model:\
+$BMI Percentile = \beta_{0} + \beta_{1}Sex + \beta_{2}Race + \beta_{3}BirthWeight + \beta_{4}Smoke + \beta_{5}FoodSecurity + \beta_{6}FastFood + \beta_{7}Activity + \varepsilon$
+
+After fitting this model, we were interested in whether the relationship
+between BMI percentile and a predictor depends on levels of another
+predictor. To find these interactions, we plotted boxplots of the
+relationships between the response and a predictor against levels of
+another predictor. We found that the association between BMI percentile
+and food security is not constant across males and females. Thus, we
+included the interaction between food security and sex into our
+regression model:\
+$BMI Percentile = \beta_{0} + \beta_{1}Sex + \beta_{2}Race + \beta_{3}BirthWeight + \beta_{4}Smoke + \beta_{5}FoodSecurity + \beta_{6}FastFood$\
 $+ \beta_{7}Activity + \beta_{8}Sex*FoodSecurity +\varepsilon$
 
-However, the resulting normal qq plot deviated from a linear line, meaning the normality assumption of residuals was not fulfilled. Thus, we added in a square root transformation to the BMI percentile response variable. The resulting linear regression model is:\
-$sqrt(Growth Percentile) = \beta_{0} + \beta_{1}Sex + \beta_{2}Race + \beta_{3}BirthWeight + \beta_{4}Smoke + \beta_{5}FoodSecurity$\
+However, the resulting normal qq plot deviated from a linear line,
+meaning the normality assumption of residuals was not fulfilled. Thus,
+we added in a square root transformation to the BMI percentile response
+variable. The resulting linear regression model is:\
+$sqrt(BMI Percentile) = \beta_{0} + \beta_{1}Sex + \beta_{2}Race + \beta_{3}BirthWeight + \beta_{4}Smoke + \beta_{5}FoodSecurity$\
 $+\beta_{6}FastFood + \beta_{7}Activity + \beta_{8}Sex*FoodSecurity +\varepsilon$
 
-This linear regression model allows us to identify the factors associated with BMI percentiles of children. However, we would also like to examine factors associated with child obesity. The CDC identifies BMI percentiles at or above the 95th percentile as obese, so we accordingly transformed our BMI percentile response variable to a binary variables (0: not obese, 1: obese). We fit a logistic regression model of this obesity binary variable to the predictors we identified in our linear regression model:\
+This linear regression model allows us to identify the factors
+associated with BMI percentiles of children. However, we would also like
+to examine factors associated with child obesity. The CDC identifies BMI
+percentiles at or above the 95th percentile as obese, so we accordingly
+transformed our BMI percentile response variable to a binary variables
+(0: not obese, 1: obese). We fit a logistic regression model of this
+obesity binary variable to the predictors we identified in our linear
+regression model:\
 $P(obesity = 1) = \frac{1}{1 + e^{-(\beta_0 + \beta_1Sex + \beta_2Race + \beta_3BirthWeight + \beta_4Smoke + \beta_5FoodSecurity + \beta_6FastFood + \beta_7Activity)}}$
 
 ```{r, include=FALSE}
+library(pacman)
+library(boot)
 #Logistic regression for obese binary variable
 data <- data %>%
   mutate(obese = case_when(
@@ -163,49 +208,137 @@ data
 m4 <- glm(obese ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1, data = data, family = binomial)
 summary(m4)
 AIC(m4)
+m3 <- lm(sqrt(growth_percentile) ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1+sex*food_sec, data=data)
+
 ```
 
 ## Diagnostics:
-```{r, fig.width=6, fig.height=3}
-m3 <- lm(sqrt(growth_percentile) ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1+sex*food_sec, data=data)
+
+First, we will examine diagnostics of the linear regression model.The residuals vs. fitted values plot has a random scatter, indicating that the linearity assumption is held. The normal Q-Q plot follows the
+linear line relatively well, showing that the residuals are
+approximately normally distributed.
+
+### Figure 2
+```{r, echo=FALSE,fig.width=6, fig.height=3}
 par(mfrow = c(1, 3))
 plot(m3, which=c(1,2,3))
 ```
 
-First, we will examine diagnostics of the linear regression model. The residuals vs fitted values plot has a random scatter, indicating that the linearity assumption is held. The normal qq plot follows the linear line relatively well, showing that the residuals are approximately normally distributed. The scale-location plot has relatively equally spread points across the line, suggesting that the assumption of constant variance is reasonable. This shows that the linear regression model is a good fit for the data.
+The scale-location plot has
+relatively equally spread points across the line, suggesting that the
+assumption of constant variance is reasonable. This shows that the
+linear regression model is a good fit for the data.
 
-```{r, fig.width=5, fig.height=3}
+Next we will examine diagnostics of the logistic regression model.
+### Figure 3
+```{r, echo=FALSE,fig.width=5, fig.height=3,fig.align='center'}
 cooks_distance <- cooks.distance(m4)
-plot(cooks_distance, pch = 20, main = "Cook's Distance Plot")
+m4_dig=glm.diag(m4)
+cd_plot=data.frame(obs=1:2698,cooksd=cooks_distance,leverage=m4_dig$h)
+ggplot(data = cd_plot,aes(x=obs))+geom_line(aes(y=cd_plot$cooksd))+ylim(0,0.005)+ylab("Cook's Distance")+xlab("Observations")+labs(title = "Cook's Distance Plot")
 ```
+
+The cook's distance plot ranges from 0 to 0.004, showing that there are
+few to no potential outliers. There are no clusters of high cooks'
+distances, meaning that are no groups of observations that have strong
+influence on the model. Additionally, we checked the variance inflation
+factor (VIF) values of the predictors. They are all close to one,
+indicating that there is low multicollinearity in the regression
+analysis.
 
 ```{r, include=FALSE}
 vif(m4)
 ```
 
-Next we will examine diagnostics of the logistic regression model. The cook's distance plot ranges from 0 to 0.004, showing that there are few to no potential outliers. There are no clusters of high cooks' distances, meaning that are no groups of observations that have strong influence on the model. Additionally, we checked the variance inflation factor (VIF) values of the predictors. They are all close to one, meaning that there is low multicollinearity in the regression analysis.
-
 ## Results:
-Based on our linear regression analysis, significant associations with BMI percentile include birth weight, whether mother smoked during pregnancy, seven days of physical activity, being Mexican American, being Other Hispanic,
-being Asian, and being female with very low food security. For every 1 pound increase in birth weight, BMI percentile increases about 3 percentiles adjusting for all other variables.
-Children with 7 days of physical activity have BMI percentiles about 14 percentiles lower compared to children with 0 days of physical activity adjusting for all other variables. 
-Additionally, the effect of very low food security on BMI percentile is different for females and males. Asian children have BMI percentiles about 11 percentiles lower compared to 
-White children adjusting for all other variables. 
+Based on our linear regression analysis, significant associations with
+BMI percentile include birth weight, whether mother smoked during
+pregnancy, seven days of physical activity, being Mexican American,
+being Other Hispanic, being Asian, and being female with very low food
+security. For every 1 pound increase in birth weight, BMI percentile
+increases about 3 percentiles adjusting for all other variables.
+Children with 7 days of physical activity have BMI percentiles about 14
+percentiles lower compared to children with 0 days of physical activity
+adjusting for all other variables. Additionally, the effect of very low
+food security on BMI percentile is different for females and males.
+Asian children have BMI percentiles about 11 percentiles lower compared
+to White children adjusting for all other variables.
 
-Based on our logistic regression analysis, the odds of being obese for white Americans is about 1.49 times higher than Mexican Americans and 0.566 times the odds for Asians. The odds of obesity for children with mothers who smoked during pregnancy are about 0.664 times the odds of those without. The odds of obesity for children with physical activity 7 days a week are about 0.360 times the odds of those that do not have any physically active days a week. The odds of obesity increase by about 19% for a one pound increase in birth weight, and increase by about 5.8% for a one meal increase in fast food per week. 
+Based on our logistic regression analysis, the odds of being obese for
+white Americans is about 1.49 times higher than Mexican Americans and
+0.566 times the odds for Asians. The odds of obesity for children with
+mothers who smoked during pregnancy are about 0.664 times the odds of
+those without. The odds of obesity for children with physical activity 7
+days a week are about 0.360 times the odds of those that do not have any
+physically active days a week. The odds of obesity increase by about 19%
+for a one pound increase in birth weight, and increase by about 5.8% for
+a one meal increase in fast food per week.
+
+### Figure 4
+```{r,echo=FALSE,fig.height=3}
+m2 <- lm(growth_percentile ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1, data=data)
+
+lm_model=summary(m2)
+df=data.frame(lm_model$coefficients)
+df$variable=rownames(df)
+colnames(df)[2]="std_error"
+df=df[df$variable!="(Intercept)",]
+df$variable=c("Sex","Mexican American","Other Hispanic","Non-Hispanic Black","Non-Hispanic Asian","Other Race (Multi)","Birthweight","Smoked",
+"Mariginal Security","Low Security","Very Low Food Sec","Fast Food","Activity 1-3","Activity 4-6","Activity 7")
+df$type=ifelse(df$Estimate>0,"Positive","Negative")
+
+log_model=summary(m4)
+df1=data.frame(log_model$coefficients)
+df1$variable=rownames(df1)
+colnames(df1)[2]="std_error"
+df1=df1[df1$variable!="(Intercept)",]
+df1$variable=c("Sex","Mexican American","Other Hispanic","Non-Hispanic Black","Non-Hispanic Asian","Other Race (Multi)","Birthweight","Smoked",
+"Mariginal Security","Low Security","Very Low Food Sec","Fast Food","Activity 1-3","Activity 4-6","Activity 7")
+df1$type=ifelse(df1$Estimate>0,"Positive","Negative")
+
+lm_plot=ggplot(df,aes(x=variable,y=Estimate))+geom_hline(yintercept = 0,linetype='dashed',color='red')+
+  geom_point()+
+  geom_errorbar(aes(ymin=Estimate-1.96*std_error,ymax=Estimate+1.96*std_error),width=0.2)+
+  coord_flip()+xlab("Variables")+labs(subtitle = "Linear Regression Estimates") + theme(plot.subtitle = element_text(size = 9))
+
+log_plot=ggplot(df1,aes(x=variable,y=Estimate))+geom_hline(yintercept = 0,linetype='dashed',color='red')+
+  geom_point()+
+  geom_errorbar(aes(ymin=Estimate-1.96*std_error,ymax=Estimate+1.96*std_error),width=0.2)+
+  coord_flip()+xlab("Variables")+labs(subtitle = "Logistic Regression Estimates") + theme(plot.subtitle = element_text(size = 9))
+
+ggarrange(lm_plot,log_plot,labels = c("A","B"))
+
+```
+
+
 
 ## Conclusions:
-Using linear regression, we identified factors associated with BMI percentiles in children of ages 2-15.
-Additionally, using the results of the linear regression analysis, we further modeled the probability of obesity as a binary outcome using logistic regression. There are both innate and environmental factors that are associated with BMI percentiles and the log odds of obesity.
-As childhood obesity is a serious problem that is often overlooked, it is important to further study these factors and promote a healthier lifestyle among children
-In the future, we would like to replicate our analysis after imputing data for number of fast food meals/week using MICE (Multiple Imputation by Chained Equation).
+
+Using linear regression, we identified factors associated with BMI
+percentiles in children of ages 2-15. Additionally, using the results of
+the linear regression analysis, we further modeled the probability of
+obesity as a binary outcome using logistic regression. There are both
+innate and environmental factors that are associated with BMI
+percentiles and the log odds of obesity. As childhood obesity is a
+serious problem that is often overlooked, it is important to further
+study these factors and promote a healthier lifestyle among children In
+the future, we would like to replicate our analysis after imputing data
+for number of fast food meals/week using MICE (Multiple Imputation by
+Chained Equation).
 
 ## References:
-1. Childhood Overweight & Obesity . Published 2023. Accessed November 14, 2023.
-https://www.cdc.gov/obesity/childhood/index.html\
-2. NHANES - About the National Health and Nutrition Examination Survey. Published 2023. Accessed November 14, 2023. https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\
-3. Link to GitHub repository: https://github.com/elenachun/625FinalProject
+
+1.  Childhood Overweight & Obesity . Published 2023. Accessed November
+    14, 2023.
+    [[https://www.cdc.gov/obesity/childhood/index.html\\\\](https://www.cdc.gov/obesity/childhood/index.html\\){.uri}]([https://www.cdc.gov/obesity/childhood/index.html\\](https://www.cdc.gov/obesity/childhood/index.html\){.uri}){.uri}
+2.  NHANES - About the National Health and Nutrition Examination Survey.
+    Published 2023. Accessed November 14, 2023.
+    [[https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\\\](https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\){.uri}]([https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\](https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\){.uri}){.uri}
+3.  Link to GitHub repository:
+    <https://github.com/elenachun/625FinalProject>
 
 ## Contributions:
-Elena Chun - Model fitting, diagnostics, part of results
-Aanya Mohan - Background, Data Overview, Conclusion
+
+Elena Chun - Model fitting, diagnostics, part of results         
+Aanya Mohan - Background, Data Overview, Conclusion           
+Siwei Cao - Data cleaning, exploratory analysis              
