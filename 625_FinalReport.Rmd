@@ -205,3 +205,6 @@ In the future, we would like to replicate our analysis after imputing data for n
 https://www.cdc.gov/obesity/childhood/index.html\
 2. NHANES - About the National Health and Nutrition Examination Survey. Published 2023. Accessed November 14, 2023. https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\
 3. Link to GitHub repository: https://github.com/elenachun/625FinalProject
+
+## Contributions:
+Elena Chun - Model fitting, diagnostics, part of results
