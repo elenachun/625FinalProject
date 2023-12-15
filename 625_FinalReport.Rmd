@@ -19,20 +19,20 @@ knitr::opts_chunk$set(echo = TRUE)
 Childhood obesity, also known as pediatric obesity, is a pressing issue
 that affects youth throughout the country. According to the Center for
 Disease Control (CDC), as of 2022, childhood obesity affects 1 in 5
-children in the United States${_1}$. There are a variety of factors that can
-lead to childhood obesity, from lifestyle to medication or genetic
+children in the United States${_1}$. There are a variety of factors that
+can lead to childhood obesity, from lifestyle to medication, or genetic
 factors. Studies show that there may be a correlation between birth
 weight and the likelihood of childhood obesity. Despite sex differences,
 a higher birth weight increases the chances of developing obesity in
 adolescents. The National Health and Nutrition Examination Survey
 (NHANES) is "designed to address the health and nutritional status of
-adults and children in the United States"${_2}$. This survey evaluates all
-aspects of a person's health and nutritional habits. Factors recorded
-such as gender, age, food security, days physically active, mother
-smoked while pregnant, and number of meals from a fast food or pizza
-place, can be used to perform a regression analysis. This analysis may
-provide an explanation for childhood obesity trends, defined by birth
-weight.
+adults and children in the United States"${_2}$. This survey evaluates
+all aspects of a person's health and nutritional habits. Factors
+recorded such as gender, age, food security, days physically active,
+mother smoked while pregnant, and number of meals from a fast food or
+pizza place, can be used to perform a regression analysis. This analysis
+may provide an explanation for childhood obesity trends, as defined by
+birth weight.
 
 ## Data Overview:
 
@@ -41,20 +41,20 @@ Examination Survey (NHANES) conducted by the CDC for 2017-2020. The
 response variable for this analysis is BMI percentile and the predictor
 of interest is weight at birth, measured in pounds, reported for
 children ages 2-15 at the time of survey. Other predictor variables
-include: gender, days physically active out of the week, whether mother
-smoked while pregnant, household food security, race, and number of
-meals from a fast food or pizza place in a week. These are all factors
-that are believed to explain trends in weight, and its effect on
-childhood obesity. Gender and race are demographic information reported
-by the survey participants. Days physically active is a metric measuring
-how many days of the week youths aged 2-15 are physically active for at
-least 60 minutes. Whether mother smoked while pregnant is a binary
-variable that assesses the smoking habits of the participants'
-biological mother. Food security is a categorical variable which rates
-the household food security on a scale of 1 to 4, where 1 is full food
-security and 4 is very low food security. Number of meals from a fast
-food or pizza place is the estimated number of meals not prepared at
-home, from a fast food restaurant or a pizza place, in a week.
+include: gender, days physically active for at least 60 minutes out of
+the week, whether mother smoked while pregnant, household food security,
+race, and number of meals from a fast food or pizza place in a week.
+These are all factors that are believed to explain trends in weight, and
+its effect on childhood obesity. Gender and race are demographic
+information reported by the survey participants. Days physically active
+is a metric measuring how many days of the week youths aged 2-15 are
+physically active for at least 60 minutes. Whether mother smoked while
+pregnant is a binary variable that assesses the smoking habits of the
+participants' biological mother. Food security is a categorical variable
+which rates the household food security on a scale of 1 to 4, where 1 is
+full food security and 4 is very low food security. Number of meals from
+a fast food or pizza place is the estimated number of meals not prepared
+at home, from a fast food restaurant or a pizza place, in a week.
 
 ## Data Cleaning:
 
@@ -68,8 +68,11 @@ provided by the CDC along with the variables BMI, age, and gender which
 were provided in the dataset. The birth weight variable in the dataset
 was given as two variables of birth weight in pounds (lb) and birth
 weight in ounces (oz), which is typically how birth weight is measured
-for babies. For easier interpretability, both variables were combined
-and reported solely as birth weight in pounds (lb). Lastly, days of physical activity was binned into categories of 0 days, 1-3 days, 4-6 days, and 7 days as we did not expect big differences in BMI percentiles for each day of physical activity.
+for babies. For easier interpretation, both variables were combined and
+reported solely as birth weight in pounds (lb). Lastly, days of physical
+activity was binned into categories of 0 days, 1-3 days, 4-6 days, and 7
+days as we did not expect big differences in BMI percentiles for each
+day of physical activity.
 
 ```{r, echo=FALSE,message=FALSE,fig.height=3,fig.width=3,fig}
 library(haven)
@@ -136,9 +139,29 @@ complete_data$smoke=as.factor(complete_data$smoke)
 
 ## Exploratory Analysis:
 
-To explore potential relationships between BMI percentile and various covariates, we conducted exploratory analysis to solidify which variables would be included in our model. Previous literature has suggested that there is a positive correlation
-between BMI percentile and birth weight. In the initial plot of BMI percentile and birthweight (Figure 1A), it is unclear whether there is a relationship between the two variables due to the dense data. After taking a random sample of 50 observations from the dataset (Figure 1B), we can see a slight
-positive correlation between BMI percentile and birth weight. Additionally, other notable covariate relationships with BMI percentile include race, household food security, and activity. In Figure 1C, differences in BMI percentiles between race are shown and Non-Hispanic Asian children have noticeably lower average BMI percentiles than other races. Differences in BMI percentiles and household food security are shown in Figure 1D and BMI percentiles appear to increase as household food security decreases. A similar relationship was found between BMI percentile and days of physical activity where BMI percentiles decreased as days of physical activity increased. Children with mothers who smoked during pregnancy had higher BMI percentiles than those who did not. Other covariates that did not show discernible differences in BMI percentile were gender and number of meals from fast food place. However, these covariates were included in the analysis as we expect these variables to influence BMI percentile based on previous literature.
+To explore potential relationships between BMI percentile and various
+covariates, we conducted exploratory analysis to solidify which
+variables would be included in our model. Previous literature has
+suggested that there is a positive correlation between BMI percentile
+and birth weight. In the initial plot of BMI percentile and birthweight
+(Figure 1A), it is unclear whether there is a relationship between the
+two variables due to the dense data. After taking a random sample of 50
+observations from the dataset (Figure 1B), we can see a slight positive
+correlation between BMI percentile and birth weight. Additionally, other
+notable covariate relationships with BMI percentile include race,
+household food security, and activity. In Figure 1C, differences in BMI
+percentiles between race are shown and Non-Hispanic Asian children have
+noticeably lower average BMI percentiles than other races. Differences
+in BMI percentiles and household food security are shown in Figure 1D
+and BMI percentiles appear to increase as household food security
+decreases. A similar relationship was found between BMI percentile and
+days of physical activity where BMI percentiles decreased as days of
+physical activity increased. Children with mothers who smoked during
+pregnancy had higher BMI percentiles than those who did not. Other
+covariates that did not show discernible differences in BMI percentile
+were gender and number of meals from fast food place. However, these
+covariates were included in the analysis as we expect these variables to
+influence BMI percentile based on previous literature.
 
 ### Figure 1
 
@@ -214,24 +237,27 @@ m3 <- lm(sqrt(growth_percentile) ~ sex+race+birthweight+smoke+food_sec+fastfood+
 
 ## Diagnostics:
 
-First, we will examine diagnostics of the linear regression model.The residuals vs. fitted values plot has a random scatter, indicating that the linearity assumption is held. The normal Q-Q plot follows the
-linear line relatively well, showing that the residuals are
-approximately normally distributed.
+First, we will examine diagnostics of the linear regression model.The
+residuals vs. fitted values plot has a random scatter, indicating that
+the linearity assumption is held. The normal Q-Q plot follows the linear
+line relatively well, showing that the residuals are approximately
+normally distributed.
 
 ### Figure 2
+
 ```{r, echo=FALSE,fig.width=6, fig.height=3}
 par(mfrow = c(1, 3))
 plot(m3, which=c(1,2,3))
 ```
 
-The scale-location plot has
-relatively equally spread points across the line, suggesting that the
-assumption of constant variance is reasonable. This shows that the
-linear regression model is a good fit for the data.
+The scale-location plot has relatively equally spread points across the
+line, suggesting that the assumption of constant variance is reasonable.
+This shows that the linear regression model is a good fit for the data.
 
 Next we will examine diagnostics of the logistic regression model.
 
 ### Figure 3
+
 ```{r, echo=FALSE,fig.width=5, fig.height=3,fig.align='center'}
 cooks_distance <- cooks.distance(m4)
 m4_dig=glm.diag(m4)
@@ -239,7 +265,7 @@ cd_plot=data.frame(obs=1:2698,cooksd=cooks_distance,leverage=m4_dig$h)
 ggplot(data = cd_plot,aes(x=obs))+geom_line(aes(y=cd_plot$cooksd))+ylim(0,0.005)+ylab("Cook's Distance")+xlab("Observations")+labs(title = "Cook's Distance Plot")
 ```
 
-The cook's distance plot ranges from 0 to 0.004, showing that there are
+The Cook's distance plot ranges from 0 to 0.004, showing that there are
 few to no potential outliers. There are no clusters of high cooks'
 distances, meaning that are no groups of observations that have strong
 influence on the model. Additionally, we checked the variance inflation
@@ -252,6 +278,7 @@ vif(m4)
 ```
 
 ## Results:
+
 Based on our linear regression analysis, significant associations with
 BMI percentile include birth weight, whether mother smoked during
 pregnancy, seven days of physical activity, being Mexican American,
@@ -276,6 +303,7 @@ for a one pound increase in birth weight, and increase by about 5.8% for
 a one meal increase in fast food per week.
 
 ### Figure 4
+
 ```{r,echo=FALSE,fig.height=3}
 m2 <- lm(growth_percentile ~ sex+race+birthweight+smoke+food_sec+fastfood+activity1, data=data)
 
@@ -311,8 +339,6 @@ ggarrange(lm_plot,log_plot,labels = c("A","B"))
 
 ```
 
-
-
 ## Conclusions:
 
 Using linear regression, we identified factors associated with BMI
@@ -331,15 +357,15 @@ Chained Equation).
 
 1.  Childhood Overweight & Obesity . Published 2023. Accessed November
     14, 2023.\
-    [[https://www.cdc.gov/obesity/childhood/index.html\\\\](https://www.cdc.gov/obesity/childhood/index.html\\){.uri}]([https://www.cdc.gov/obesity/childhood/index.html\\](https://www.cdc.gov/obesity/childhood/index.html\){.uri}){.uri}
+    [[https://www.cdc.gov/obesity/childhood/index.html\\\\](https://www.cdc.gov/obesity/childhood/index.html\){.uri}]([https://www.cdc.gov/obesity/childhood/index.html\\](https://www.cdc.gov/obesity/childhood/index.html)%7B.uri%7D){.uri}
 2.  NHANES - About the National Health and Nutrition Examination Survey.
     Published 2023. Accessed November 14, 2023.\
-    [[https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\\\](https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\){.uri}]([https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\](https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\){.uri}){.uri}
+    [[https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\\\](https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\){.uri}]([https://www.cdc.gov/nchs/nhanes/about_nhanes.htm\\](https://www.cdc.gov/nchs/nhanes/about_nhanes.htm)%7B.uri%7D){.uri}
 3.  Link to GitHub repository:
     <https://github.com/elenachun/625FinalProject>
 
 ## Contributions:
 
-Elena Chun - Model fitting, diagnostics, part of results         
-Aanya Mohan - Background, Data Overview, Conclusion           
-Siwei Cao - Data cleaning, exploratory analysis              
+Elena Chun - Model fitting, diagnostics, part of results\
+Aanya Mohan - Background, Data Overview, Conclusion\
+Siwei Cao - Data cleaning, exploratory analysis
